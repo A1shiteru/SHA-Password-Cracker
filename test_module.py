@@ -1,33 +1,43 @@
-# test_module.py
-
 import unittest
-from port_scanner import get_open_ports
+from password_cracker import crack_sha1_hash
 
-class TestPortScanner(unittest.TestCase):
+class TestPasswordCracker(unittest.TestCase):
 
-    def test_valid_hostname_verbose(self):
-        result = get_open_ports("scanme.nmap.org", [20, 80], True)
-        self.assertIn("Open ports for", result)
-        self.assertIn("22", result)  # SSH
-        self.assertIn("80", result)  # HTTP
+    def test_unsalted_hashes(self):
+        self.assertEqual(
+            crack_sha1_hash("5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8"),
+            "password"
+        )
+        self.assertEqual(
+            crack_sha1_hash("b305921a3723cd5d70a375cd21a61e60aabb84ec"),
+            "sammy123"
+        )
+        self.assertEqual(
+            crack_sha1_hash("c7ab388a5ebefbf4d550652f1eb4d833e5316e3e"),
+            "abacab"
+        )
+        self.assertEqual(
+            crack_sha1_hash("1234567890abcdef1234567890abcdef12345678"),
+            "PASSWORD NOT IN DATABASE"
+        )
 
-    def test_valid_ip_non_verbose(self):
-        ports = get_open_ports("45.33.32.156", [20, 80])
-        self.assertIsInstance(ports, list)
-        self.assertIn(22, ports)
-        self.assertIn(80, ports)
+    def test_salted_hashes(self):
+        self.assertEqual(
+            crack_sha1_hash("53d8b3dc9d39f0184144674e310185e41a87ffd5", use_salts=True),
+            "superman"
+        )
+        self.assertEqual(
+            crack_sha1_hash("da5a4e8cf89539e66097acd2f8af128acae2f8ae", use_salts=True),
+            "q1w2e3r4t5"
+        )
+        self.assertEqual(
+            crack_sha1_hash("ea3f62d498e3b98557f9f9cd0d905028b3b019e1", use_salts=True),
+            "bubbles1"
+        )
+        self.assertEqual(
+            crack_sha1_hash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", use_salts=True),
+            "PASSWORD NOT IN DATABASE"
+        )
 
-    def test_invalid_hostname(self):
-        result = get_open_ports("invalid.hostname.test", [20, 25])
-        self.assertEqual(result, "Error: Invalid hostname")
-
-    def test_invalid_ip(self):
-        result = get_open_ports("123.456.789.000", [20, 25])
-        self.assertEqual(result, "Error: Invalid IP address")
-
-    def test_service_mapping(self):
-        result = get_open_ports("scanme.nmap.org", [22, 22], True)
-        self.assertIn("ssh", result)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
